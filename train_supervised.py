@@ -20,7 +20,8 @@ CLASSES = args.classes
 R_SAMPLE = args.r_sample
 EPOCH = args.n_epoch
 BS = args.bs
-NUM_IN_FEAT = args.num_in_feat
+THRESHOLD = args.threshold
+# NUM_IN_FEAT = args.num_in_feat
 
 
 class IDSDataset(Dataset):
@@ -55,7 +56,11 @@ def run():
     feat_imp = get_feature_importance(feats.values, target.values, N_LGB, R_SAMPLE)
     feat_imp = feat_imp.sum(0)
     rank = np.argsort(-feat_imp)
-    feats = feats.iloc[:, rank[:NUM_IN_FEAT]]
+    feat_imp = -(np.sort(-feat_imp) / feat_imp.sum())
+    feat_imp = feat_imp.cumsum()
+    num_in_feat = np.where(feat_imp > THRESHOLD)[0] + 1
+
+    feats = feats.iloc[:, rank[:num_in_feat]]
     # feat_imp = torch.tensor(feat_imp, dtype=torch.float, device=device)
     feat_select_time = time.time() - feat_select_start
 

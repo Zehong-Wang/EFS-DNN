@@ -10,6 +10,7 @@ def get_args():
     parser.add_argument('--bs', type=int, default=1024, help='The batch size')
     parser.add_argument('--num_in_feat', type=int, default=30, help='The number of input features')
     parser.add_argument('--n_lgb', type=int, default=3, help='The number of LightGBM')
+    parser.add_argument('--threshold', type=float, default=0.9, help='The threshold in feature selection phase')
     parser.add_argument('--r_sample', type=float, default=0.5, help='The ratio of sampled instances')
     parser.add_argument('--classes', type=int, default=2, help='The number of classes')
     parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate')
