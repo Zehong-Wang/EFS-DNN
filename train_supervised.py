@@ -8,6 +8,7 @@ import time
 from pycm import ConfusionMatrix
 from model.model import NeuralNet
 from utils.args import get_args
+from utils.log import set_logger
 from utils.utils import get_feature_importance
 
 args = get_args()
@@ -35,7 +36,7 @@ class IDSDataset(Dataset):
         return self.features[item], self.target[item]
 
 
-def run():
+def run(logger):
     # np.random.seed(SEED)
     # torch.manual_seed(SEED)
     # torch.cuda.manual_seed_all(SEED)
@@ -84,33 +85,31 @@ def run():
         loss = train(train_dataloader, efsdnn, loss_fn, optim, device)
         train_time = time.time() - train_start + feat_select_time
 
-        print('Training time: {:.8f}'.format(train_time))
+        logger.info(f'------------Epoch: {i + 1}/{EPOCH}------------')
+        logger.info('Training time: {:.8f}'.format(train_time))
 
-        print('---------------Validation-----------------')
+        logger.info('---------------Validation-----------------')
         val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time = eval(val_dataloader, efsdnn, CLASSES, device)
-        print_results(val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time)
+        print_results(logger, val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time)
 
-        print('---------------Test-----------------')
+        logger.info('---------------Test-----------------')
         test_acc, test_f1, test_fpr, test_tpr, test_auc, test_inf_time = eval(test_dataloader, efsdnn, CLASSES, device)
-        print_results(test_acc, test_f1, test_fpr, test_tpr, test_auc, test_inf_time)
+        print_results(logger, test_acc, test_f1, test_fpr, test_tpr, test_auc, test_inf_time)
 
 
-def print_results(acc, f1, fpr, tpr, auc, inf_time):
+def print_results(logger, acc, f1, fpr, tpr, auc, inf_time):
     classes = len(list(acc.keys())) - 1
     if classes == 2:
-        print('Accuracy: {:.4f}, FPR: {:.4f}, TPR: {:.4f}, AUC: {:.4f}, F1: {:.4f}'.format(
+        logger.info('Accuracy: {:.4f}, FPR: {:.4f}, TPR: {:.4f}, AUC: {:.4f}, F1: {:.4f}'.format(
             acc[2], fpr[2], tpr[2], auc[2], f1[2]
         ))
-        print('Inference time: {:.8f}'.format(inf_time))
     elif classes == 5:
-        # type2idx = {'normal': 0, 'dos': 1, 'probe': 2, 'r2l': 3, 'u2r': 4}
         idx2type = {0: 'Normal', 1: 'DOS', 2: 'Probe', 3: 'R2L', 4: 'U2R', 5: 'Overall'}
-        # print('Accuracy')
         for idx, type in idx2type.items():
-            print('Type: {}, Accuracy: {:.4f}, FPR: {:.4f}, TPR: {:.4f}, AUC: {:.4f}, F1: {:.4f}'.format(
+            logger.info('Type: {}, Accuracy: {:.4f}, FPR: {:.4f}, TPR: {:.4f}, AUC: {:.4f}, F1: {:.4f}'.format(
                 type, acc[idx], fpr[idx], tpr[idx], auc[idx], f1[idx]
             ))
-        print('Inference time: {:.8f}'.format(inf_time))
+    logger.info('Inference time: {:.8f}'.format(inf_time))
 
 
 def train(dataloader, model, loss_fn, optim, device):
@@ -168,4 +167,5 @@ def eval(dataloader, model, classes, device):
 
 
 if __name__ == '__main__':
-    run()
+    logger = set_logger(DATA, CLASSES, NUM_IN_FEAT, N_LGB, R_SAMPLE)
+    run(logger)
