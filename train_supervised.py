@@ -76,7 +76,10 @@ def run(logger):
     optim = torch.optim.Adam(efsdnn.parameters(), lr=LR)
 
     for i in range(EPOCH):
-        x_train, x_test, y_train, y_test = train_test_split(feats.values, target.values, train_size=0.8, shuffle=True)
+        if DATA == 'UNSW_NB15':
+            x_train, x_test, y_train, y_test = train_test_split(feats.values, target.values, train_size=0.68, shuffle=False)
+        else:
+            x_train, x_test, y_train, y_test = train_test_split(feats.values, target.values, train_size=0.8, shuffle=True)
         # x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, train_size=0.875, shuffle=True)
         train_dataset = IDSDataset(x_train, y_train)
         # val_dataset = IDSDataset(x_val, y_val)
