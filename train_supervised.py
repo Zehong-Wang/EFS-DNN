@@ -18,6 +18,7 @@ SEED = args.seed
 N_LGB = args.n_lgb
 LR = args.lr
 CLASSES = args.classes
+DROPOUT = args.dropout
 R_SAMPLE = args.r_sample
 EPOCH = args.n_epoch
 BS = args.bs
@@ -72,7 +73,7 @@ def run(logger):
     embedding_dim = 5
     embedding_feat = {feat: (feats[feat].value_counts().count(), embedding_dim) for feat in cate_feats}
 
-    efsdnn = NeuralNet(feat_dict, embedding_feat, [512, 512, 512], [0, 0, 0], CLASSES).to(device)
+    efsdnn = NeuralNet(feat_dict, embedding_feat, [512, 512, 512], [DROPOUT, DROPOUT, DROPOUT], CLASSES).to(device)
     loss_fn = nn.CrossEntropyLoss()
     optim = torch.optim.Adam(efsdnn.parameters(), lr=LR)
 
@@ -169,7 +170,7 @@ def eval(dataloader, model, classes, device):
     d_tpr[classes] = np.mean(list(d_tpr.values()))
     d_auc[classes] = np.mean(list(d_auc.values()))
 
-    return d_acc, d_f1, d_fpr, d_tpr, d_auc, np.mean(m_inf_time)
+    return d_acc, d_f1, d_fpr, d_tpr, d_auc, np.sum(m_inf_time)
 
 
 if __name__ == '__main__':
