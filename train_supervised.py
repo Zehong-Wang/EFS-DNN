@@ -59,7 +59,7 @@ def run(logger):
     rank = np.argsort(-feat_imp)
     feat_imp = -(np.sort(-feat_imp) / feat_imp.sum())
     feat_imp = feat_imp.cumsum()
-    num_in_feat = np.where(feat_imp > THRESHOLD)[0] + 1
+    num_in_feat = (np.where(feat_imp > THRESHOLD)[0][0]) + 1
 
     feats = feats.iloc[:, rank[:num_in_feat]]
     # feat_imp = torch.tensor(feat_imp, dtype=torch.float, device=device)
@@ -91,6 +91,7 @@ def run(logger):
         train_time = time.time() - train_start + feat_select_time
 
         logger.info(f'------------Epoch: {i + 1}/{EPOCH}------------')
+        logger.info(f'The number of selected features is {num_in_feat}')
         logger.info('Training time: {:.8f}'.format(train_time))
 
         logger.info('---------------Validation-----------------')
@@ -172,5 +173,5 @@ def eval(dataloader, model, classes, device):
 
 
 if __name__ == '__main__':
-    logger = set_logger(DATA, CLASSES, NUM_IN_FEAT, N_LGB, R_SAMPLE)
+    logger = set_logger(DATA, CLASSES, THRESHOLD, N_LGB, R_SAMPLE)
     run(logger)
