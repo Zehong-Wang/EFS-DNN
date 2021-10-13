@@ -19,7 +19,7 @@ LR = args.lr
 CLASSES = args.classes
 R_SAMPLE = args.r_sample
 EPOCH = args.n_epoch
-BS = args.batch_size
+BS = args.bs
 NUM_IN_FEAT = args.num_in_feat
 
 
@@ -36,9 +36,9 @@ class IDSDataset(Dataset):
 
 
 def run():
-    np.random.seed(SEED)
-    torch.manual_seed(SEED)
-    torch.cuda.manual_seed_all(SEED)
+    # np.random.seed(SEED)
+    # torch.manual_seed(SEED)
+    # torch.cuda.manual_seed_all(SEED)
 
     device_string = 'cuda:{}'.format(GPU) if torch.cuda.is_available() and GPU >= 0 else 'cpu'
     print(f'Model is trained in {device_string}')
@@ -54,7 +54,7 @@ def run():
 
     feat_imp = get_feature_importance(feats.values, target.values, N_LGB, R_SAMPLE)
     feat_imp = feat_imp.sum(0)
-    rank = np.argsort(feat_imp)
+    rank = np.argsort(-feat_imp)
     feats = feats.iloc[:, rank[:NUM_IN_FEAT]]
     # feat_imp = torch.tensor(feat_imp, dtype=torch.float, device=device)
     feat_select_time = time.time() - feat_select_start
@@ -63,10 +63,10 @@ def run():
     num_feats = [x for x in feats.columns if feats[x].dtype == np.float64]
     feat_dict = {feat: idx for idx, feat in enumerate(feats.columns)}
 
-    embedding_dim = 12
+    embedding_dim = 5
     embedding_feat = {feat: (feats[feat].value_counts().count(), embedding_dim) for feat in cate_feats}
 
-    efsdnn = NeuralNet(feat_dict, embedding_feat, [512, 512], [0.3, 0.3], CLASSES)
+    efsdnn = NeuralNet(feat_dict, embedding_feat, [512, 512, 512], [0, 0, 0], CLASSES).to(device)
     loss_fn = nn.CrossEntropyLoss()
     optim = torch.optim.Adam(efsdnn.parameters(), lr=LR)
 
@@ -153,11 +153,11 @@ def eval(dataloader, model, classes, device):
             m_auc.append(cm.AUC)
 
     for k in range(classes):
-        d_acc[k] = np.mean([d[k] for d in m_acc if k in set(d.keys())])
-        d_f1[k] = np.mean([d[k] for d in m_f1 if k in set(d.keys())])
-        d_fpr[k] = np.mean([d[k] for d in m_fpr if k in set(d.keys())])
-        d_tpr[k] = np.mean([d[k] for d in m_tpr if k in set(d.keys())])
-        d_auc[k] = np.mean([d[k] for d in m_auc if k in set(d.keys())])
+        d_acc[k] = np.mean([d[k] if d[k] != 'None' else 0 for d in m_acc if k in set(d.keys())])
+        d_f1[k] = np.mean([d[k] if d[k] != 'None' else 0 for d in m_f1 if k in set(d.keys())])
+        d_fpr[k] = np.mean([d[k] if d[k] != 'None' else 0 for d in m_fpr if k in set(d.keys())])
+        d_tpr[k] = np.mean([d[k] if d[k] != 'None' else 0 for d in m_tpr if k in set(d.keys())])
+        d_auc[k] = np.mean([d[k] if d[k] != 'None' else 0 for d in m_auc if k in set(d.keys())])
     d_acc[classes] = np.mean(list(d_acc.values()))
     d_f1[classes] = np.mean(list(d_f1.values()))
     d_fpr[classes] = np.mean(list(d_fpr.values()))
