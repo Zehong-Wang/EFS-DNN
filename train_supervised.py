@@ -23,7 +23,6 @@ R_SAMPLE = args.r_sample
 EPOCH = args.n_epoch
 BS = args.bs
 THRESHOLD = args.threshold
-# NUM_IN_FEAT = args.num_in_feat
 
 
 class IDSDataset(Dataset):
@@ -39,9 +38,9 @@ class IDSDataset(Dataset):
 
 
 def run(logger):
-    # np.random.seed(SEED)
-    # torch.manual_seed(SEED)
-    # torch.cuda.manual_seed_all(SEED)
+    np.random.seed(SEED)
+    torch.manual_seed(SEED)
+    torch.cuda.manual_seed_all(SEED)
 
     device_string = 'cuda:{}'.format(GPU) if torch.cuda.is_available() and GPU >= 0 else 'cpu'
     print(f'Model is trained in {device_string}')
@@ -63,7 +62,6 @@ def run(logger):
     num_in_feat = (np.where(feat_imp > THRESHOLD)[0][0]) + 1
 
     feats = feats.iloc[:, rank[:num_in_feat]]
-    # feat_imp = torch.tensor(feat_imp, dtype=torch.float, device=device)
     feat_select_time = time.time() - feat_select_start
 
     cate_feats = [x for x in feats.columns if feats[x].dtype == np.int64]
@@ -79,12 +77,12 @@ def run(logger):
 
     for i in range(EPOCH):
         x_train, x_test, y_train, y_test = train_test_split(feats.values, target.values, train_size=0.8, shuffle=True)
-        x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, train_size=0.875, shuffle=True)
+        # x_train, x_val, y_train, y_val = train_test_split(x_train, y_train, train_size=0.875, shuffle=True)
         train_dataset = IDSDataset(x_train, y_train)
-        val_dataset = IDSDataset(x_val, y_val)
+        # val_dataset = IDSDataset(x_val, y_val)
         test_dataset = IDSDataset(x_test, y_test)
         train_dataloader = DataLoader(train_dataset, batch_size=BS, shuffle=True)
-        val_dataloader = DataLoader(val_dataset, batch_size=BS, shuffle=True)
+        # val_dataloader = DataLoader(val_dataset, batch_size=BS, shuffle=True)
         test_dataloader = DataLoader(test_dataset, batch_size=BS, shuffle=True)
 
         train_start = time.time()
@@ -95,9 +93,9 @@ def run(logger):
         logger.info(f'The number of selected features is {num_in_feat}')
         logger.info('Training time: {:.8f}'.format(train_time))
 
-        logger.info('---------------Validation-----------------')
-        val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time = eval(val_dataloader, efsdnn, CLASSES, device)
-        print_results(logger, val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time)
+        # logger.info('---------------Validation-----------------')
+        # val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time = eval(val_dataloader, efsdnn, CLASSES, device)
+        # print_results(logger, val_acc, val_f1, val_fpr, val_tpr, val_auc, val_inf_time)
 
         logger.info('---------------Test-----------------')
         test_acc, test_f1, test_fpr, test_tpr, test_auc, test_inf_time = eval(test_dataloader, efsdnn, CLASSES, device)
